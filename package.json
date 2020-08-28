@@ -1,0 +1,19 @@
+{
+  "name": "personalwebapp",
+  "version": "1.0.0",
+  "description": "My personal web application ",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index",
+    "dev": "nodemon index"
+  },
+  "author": "Carlos Cortes",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongoose": "^5.10.0",
+    "mongoose-unique-validator": "^2.0.3",
+    "nodemon": "^2.0.4",
+    "path": "^0.12.7"
+  }
+}
