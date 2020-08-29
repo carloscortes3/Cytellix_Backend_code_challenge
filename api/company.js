@@ -37,8 +37,9 @@ router.post('/', async (req, res) => {
 
     try{
         const save_company = await company.save();
-        res.json(save_company);
+        res.json([save_company]);
     }catch(err){
+        console.log(err)
         res.json([{message: err}]);
     }
 });

@@ -24,9 +24,8 @@ router.get('/:usr_id', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-    console.log('here');
     try{
-        let companyAmount = await User.find({company: req.body.company}).length;
+        let companyAmount = await User.find({company: req.body.company});
         let roles = await Role.find({name: req.body.role});
         let companies = await Company.find({name: req.body.company});
 
@@ -35,7 +34,6 @@ router.post('/', async (req, res) => {
         }else if (companies.length===0){
             res.json([{message: "The company you  gave does not already exist, please try another one."}]);
         }else{
-            console.log(4);
             const usr = await new User({
                 email: req.body.email,
                 password: req.body.password,
@@ -48,14 +46,13 @@ router.post('/', async (req, res) => {
             res.status(200).json([save_usr]);
 
             const updateCompany = await Company.updateOne(
-                {name: req.body.company},
+                {name: usr.company},
                 {$set: {
-                    users_quantity: companyAmount + 1
+                    users_quantity: (companyAmount.length + 1)
                 }}
             );
         }
     }catch(err){
-        console.log(1);
         res.json([{message: err}]);
     }
 });
@@ -85,12 +82,12 @@ router.delete('/:usr_id', async (req, res) => {
     try{
         const usr = await User.findById(req.params.usr_id);
         const remove_usr = User.remove({_id: req.params.usr_id});
-        const companyAmount = await User.find().filter((obj) => obj.company===usr.company).length;
+        const companyAmount = await User.find().filter({company: usr.company});
 
         const updateCompany = await Company.updateOne(
             {name: usr.company},
             {$set: {
-                users_quantity: companyAmount
+                users_quantity: (companyAmount.length + 1)
             }}
         );
     }catch(err){

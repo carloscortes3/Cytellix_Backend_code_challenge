@@ -7,11 +7,8 @@ const Session = require('../models/Session');
 router.post('/by_ses/', async (req, res) => {
     try{
         const ses = await Session.find({session: req.body.session});
-        console.log(ses);
-        console.log(ses[0].email);
         if (ses.length && (ses[0].time+(15*60000)) - Date.now() > 0){
             const usr_info =  await User.find({email: ses[0].email});
-            console.log(usr_info);
             if (usr_info.length > 0){
                 res.status(200).json([{
                     "_id": usr_info[0]._id,

@@ -3,6 +3,7 @@ const path = require('path');
 const app = express();
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+require('dotenv/config');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -17,7 +18,7 @@ app.use('/api/user', require('./api/user'));
 app.use('/api/role', require('./api/role'));
 app.use('/api/company', require('./api/company'));
 app.use('/api/session', require('./api/session'));
-mongoose.connect('mongodb://localhost:27017/personal_webapp');
+mongoose.connect(process.env.DB_CONNECT, { useNewUrlParser: true}, ()=> console.log('connected to DB!'));
 
 
 
