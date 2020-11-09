@@ -1,0 +1,8 @@
+#ignore downloaded librares in 'node_modules' directory
+node_modules/
+
+#ignore the environment variables
+.env
+
+#ignore VSCode specific files
+.vscode/
