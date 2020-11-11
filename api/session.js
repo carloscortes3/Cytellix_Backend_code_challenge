@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require("crypto");
 const User = require('../models/User');
 const Session = require('../models/Session');
 
@@ -7,7 +8,7 @@ const Session = require('../models/Session');
 router.post('/by_ses/', async (req, res) => {
     try{
         const ses = await Session.find({session: req.body.session});
-        if (ses.length && (ses[0].time+(15*60000)) - Date.now() > 0){
+        if (ses.length && (ses[0].time > Date.now())){
             const usr_info =  await User.find({email: ses[0].email});
             if (usr_info.length > 0){
                 res.status(200).json([{
@@ -32,19 +33,23 @@ router.post('/by_ses/', async (req, res) => {
 
 router.post('/auth/', async (req, res) => {
     try{
-        let user_info = await User.find({email: req.body.email, password: req.body.password});
+        let user_info = await User.find({email: req.body.email});
 
-        if (user_info.length!==0){
+        if (user_info.length!==0 && user_info[0].password === crypto.pbkdf2Sync(req.body.password, user_info[0].salt, 1000, 64, 'sha512').toString('base64')){
+            console.log('here')
             const count =  await Session.find({email: req.body.email});
             if (count.length){
                 const remove_ses = await Session.deleteOne({email: req.body.email});
             }
-            const ses = await new Session({
-                session: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 7),
+            const d = new Date();
+            const ses = new Session({
+                session: crypto.randomBytes(16).toString('base64'),
                 email: req.body.email,
-                time: Date.now()
+                time: d.setMinutes(d.getMinutes() + 15)
             });
             const save_ses = await ses.save();
+
+            //Need to return only the session. Then have the session be the filter of only being able to access a specific user. Each session is only associated with one user. 
             res.status(200).json([{
                 "_id": user_info[0]._id,
                 "email": user_info[0].email,

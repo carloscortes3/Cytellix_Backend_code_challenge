@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require("crypto");
 const router = express.Router();
 const User = require('../models/User');
 const Company = require('../models/Company');
@@ -34,9 +35,12 @@ router.post('/', async (req, res) => {
         }else if (companies.length===0){
             res.json([{message: "The company you  gave does not already exist, please try another one."}]);
         }else{
+            const salt = crypto.randomBytes(16).toString('base64');
+
             const usr = await new User({
                 email: req.body.email,
-                password: req.body.password,
+                password: crypto.pbkdf2Sync(req.body.password, salt, 1000, 64, 'sha512').toString('base64'),
+                salt: salt,
                 role: req.body.role,
                 company: req.body.company,
                 authorized: (req.body.role!=="Admin" || companyAmount === 0)
@@ -58,10 +62,11 @@ router.post('/', async (req, res) => {
 });
 
 router.post('/auth', async (req, res) => {
+    console.log("auth");
     try{
-        let user_info = await User.find({email: req.body.email, password: req.body.password});
+        let user_info = await User.find({email: req.body.email});
 
-        if (user_info.length!==0){
+        if (user_info.length!==0 && user_info[0].password === crypto.pbkdf2Sync(req.body.password, salt, 1000, 64, 'sha512').toString('base64')){
             res.status(200).json([{
                 "_id": user_info[0]._id,
                 "email": user_info[0].email,
