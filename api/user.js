@@ -5,24 +5,6 @@ const User = require('../models/User');
 const Company = require('../models/Company');
 const Role = require('../models/Role');
 
-router.get('/', async (req, res) => {
-    try{
-        const usrs = await User.find();
-        res.json(usrs);
-    } catch (err) {
-        res.json([{message: err}]);
-    }
-});
-
-router.get('/:usr_id', async (req, res) => {
-    try{
-        const usr = await User.findById(req.params.usr_id);
-        res.json(usr);
-    }catch(err){
-        res.json([{message: err}]);
-    }
-
-});
 
 router.post('/', async (req, res) => {
     try{
@@ -61,27 +43,6 @@ router.post('/', async (req, res) => {
     }
 });
 
-router.post('/auth', async (req, res) => {
-    console.log("auth");
-    try{
-        let user_info = await User.find({email: req.body.email});
-
-        if (user_info.length!==0 && user_info[0].password === crypto.pbkdf2Sync(req.body.password, salt, 1000, 64, 'sha512').toString('base64')){
-            res.status(200).json([{
-                "_id": user_info[0]._id,
-                "email": user_info[0].email,
-                "role": user_info[0].role,
-                "company": user_info[0].company,
-                "authorized": user_info[0].authorized
-            }]);
-        }else{
-            res.json([{message: "Incorrect email or passsword, please try again"}]);
-        }
-        
-    }catch(err){
-        res.json([{message: err}]);
-    }
-});
 
 router.delete('/:usr_id', async (req, res) => {
     try{

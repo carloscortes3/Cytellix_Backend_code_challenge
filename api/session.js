@@ -4,7 +4,32 @@ const crypto = require("crypto");
 const User = require('../models/User');
 const Session = require('../models/Session');
 
+router.get('/user_data', async (req, res) => {
+    const session_obj = await Session.findOne({session: req.header("session-token")});
+    if (session_obj.time > Date.now()){
+        try{
+            const usr = await User.findOne({email: session_obj.email});
+            if (usr){
+                res.json({
+                    email: usr.email,
+                    company: usr.company,
+                    role: usr.role,
+                    authorized: usr.authorized
+                })
+            }
+            else{
+                res.json({message: "User for this session does not exist. Please log in again!"})
+            }
+        }catch(err){
+            res.json({message: err});
+        }
+    }else{
+        return res.json({message: "Session has expired! Please log in again."})
+    }
 
+});
+
+//Need to make this one work after initial changes have been finished
 router.post('/by_ses/', async (req, res) => {
     try{
         const ses = await Session.find({session: req.body.session});
@@ -12,11 +37,6 @@ router.post('/by_ses/', async (req, res) => {
             const usr_info =  await User.find({email: ses[0].email});
             if (usr_info.length > 0){
                 res.status(200).json([{
-                    "_id": usr_info[0]._id,
-                    "email": usr_info[0].email,
-                    "role": usr_info[0].role,
-                    "company": usr_info[0].company,
-                    "authorized": usr_info[0].authorized,
                     "session": req.body.session
                 }]);
             }else{
@@ -36,7 +56,6 @@ router.post('/auth/', async (req, res) => {
         let user_info = await User.find({email: req.body.email});
 
         if (user_info.length!==0 && user_info[0].password === crypto.pbkdf2Sync(req.body.password, user_info[0].salt, 1000, 64, 'sha512').toString('base64')){
-            console.log('here')
             const count =  await Session.find({email: req.body.email});
             if (count.length){
                 const remove_ses = await Session.deleteOne({email: req.body.email});
@@ -48,14 +67,7 @@ router.post('/auth/', async (req, res) => {
                 time: d.setMinutes(d.getMinutes() + 15)
             });
             const save_ses = await ses.save();
-
-            //Need to return only the session. Then have the session be the filter of only being able to access a specific user. Each session is only associated with one user. 
             res.status(200).json([{
-                "_id": user_info[0]._id,
-                "email": user_info[0].email,
-                "role": user_info[0].role,
-                "company": user_info[0].company,
-                "authorized": user_info[0].authorized,
                 "session": ses.session
             }]);
         }else{
